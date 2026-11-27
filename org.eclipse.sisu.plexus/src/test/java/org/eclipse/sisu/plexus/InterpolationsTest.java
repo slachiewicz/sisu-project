@@ -52,6 +52,34 @@ class InterpolationsTest {
     }
 
     @Test
+    void matchesFilterReaderOnMalformedTokens() {
+        final Map<String, Object> variables = new HashMap<>();
+        variables.put("x", "X");
+        variables.put("a", "A");
+        variables.put("b", "B");
+        variables.put("e", "");
+
+        assertEquals("abc ${x", Interpolations.interpolate("abc ${x", variables));
+        assertEquals("a $ b $x X", Interpolations.interpolate("a $ b $x ${x}", variables));
+        assertEquals("${a${b}}", Interpolations.interpolate("${a${b}}", variables));
+        assertEquals("${nokey}", Interpolations.interpolate("${nokey}", variables));
+        assertEquals("z", Interpolations.interpolate("${e}z", variables));
+        assertEquals("X${", Interpolations.interpolate("${x}${", variables));
+        assertEquals("$", Interpolations.interpolate("$", variables));
+    }
+
+    @Test
+    void leavesTokensAfterPairedDollarsUntouched() {
+        final Map<String, Object> variables = new HashMap<>();
+        variables.put("x", "X");
+
+        assertEquals("$${x}", Interpolations.interpolate("$${x}", variables));
+        assertEquals("$$X", Interpolations.interpolate("$$${x}", variables));
+        assertEquals("$$$${x}", Interpolations.interpolate("$$$${x}", variables));
+        assertEquals("X$${x}X", Interpolations.interpolate("${x}$${x}${x}", variables));
+    }
+
+    @Test
     void interpolatesReaderContents() throws Exception {
         final Map<String, Object> variables = new HashMap<>();
         variables.put("key", "value");

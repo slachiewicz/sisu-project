@@ -45,6 +45,11 @@ final class Interpolations {
                 result.append(text, position, text.length());
                 break;
             }
+            if (isEscaped(text, position, start)) {
+                result.append(text, position, start + 2);
+                position = start + 2;
+                continue;
+            }
             final int end = text.indexOf('}', start + 2);
             if (end < 0) {
                 result.append(text, position, text.length());
@@ -60,6 +65,18 @@ final class Interpolations {
             position = end + 1;
         }
         return result.toString();
+    }
+
+    /**
+     * The plexus-utils reader consumed {@code $} characters in pairs, so a token preceded by an odd number of extra
+     * {@code $} characters (as in {@code $${key}}) was left as is.
+     */
+    private static boolean isEscaped(final String text, final int lowerBound, final int start) {
+        int dollars = 0;
+        while (start - dollars > lowerBound && text.charAt(start - dollars - 1) == '$') {
+            dollars++;
+        }
+        return (dollars & 1) == 1;
     }
 
     /**
